@@ -1,6 +1,7 @@
 ﻿#include "SaveMapInstance.h"
 #include "TimerManager.h"
-
+#include "SaveGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 // exec
 
 #include "Engine/WorldComposition.h"
@@ -58,14 +59,42 @@ void USaveMapInstance::TestSave()
 	UClass * TAC = LoadClass<AActor>(nullptr, TEXT("/Game/TActor.TActor_C"));
 
 	FVector TemLocation(0,0,30);
-	GetWorld()->SpawnActor(TAC, &TemLocation);
-	SaveCurrentLevel();
+	AActor * TemActor = GetWorld()->SpawnActor(TAC, &TemLocation);
+	
+	USaveGameInstance * SaveGameInstace = Cast<USaveGameInstance>(UGameplayStatics::CreateSaveGameObject(USaveGameInstance::StaticClass()));
+	
+	SaveGameInstace->StoreActor(TemActor);
+
+	bool IsOk = UGameplayStatics::SaveGameToSlot(SaveGameInstace, TEXT("GameMap"),0);
+
+	if (IsOk)
+	{
+
+	}
+
 }
 void USaveMapInstance::TravelMap()
 {
+	USaveGameInstance * SaveGameInstace = Cast<USaveGameInstance>(UGameplayStatics::LoadGameFromSlot(TEXT("GameMap"), 0));
+	
+	for (auto TemActorData : SaveGameInstace->ActorsData)
+	{
+		UClass* TemClass = FindObject<UClass>(ANY_PACKAGE, *TemActorData.ClassPath);
+		if (TemClass == nullptr)
+		{
+			TemClass = LoadObject<UClass>(nullptr, *TemActorData.ClassPath);
+		}
+		FTransform PawnT = TemActorData.ActroTransform;
+		AActor * TemActor = GetWorld()->SpawnActor(TemClass, &PawnT);
+		FMemoryReader MemoryReader(TemActorData.ActorData, true);
+		FObjectAndNameAsStringProxyArchive Ar(MemoryReader, true);
+
+		TemActor->Serialize(Ar);
+	}
+	
 	//FString TemMap = TEXT("OPEN ") + GetAutoSaveDir() + TEXT("/UEDPIE_0_Untitled_1.umap");
 	FString TemMap = TEXT("/Game/UEDPIE_0_NewMap");
-	Exec(GetWorld(), *TemMap);
+	//Exec(GetWorld(), *TemMap);
 }
 USaveMapInstance::USaveMapInstance()
 {
