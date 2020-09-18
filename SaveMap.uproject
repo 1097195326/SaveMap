@@ -1,0 +1,20 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{BB795547-4157-20E0-C192-ADA65A8EFDA7}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "SaveMap",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"PostBuildSteps":
+	{
+		"Win64": [
+			"cd $(ProjectDir)",
+			"if \"$(TargetConfiguration)\" == \"Debug\" (cd $(ProjectDir)\n\r start CopyDebugGame.bat)"
+		]
+	}
+}
